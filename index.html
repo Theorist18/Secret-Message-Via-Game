@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Maze Game</title>
+<style>
+  body {
+    margin: 0;
+    background: url('https://cdn.lospec.com/gallery/cats-in-the-blue-lake-731334.gif') no-repeat center center fixed;
+    background-size: cover;
+    font-family: Arial, sans-serif;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  #game {
+    display: grid;
+    grid-template-columns: repeat(13, 40px);
+    grid-template-rows: repeat(13, 40px);
+    gap: 2px;
+    margin-top: 20px;
+    user-select: none;
+  }
+  .cell {
+    width: 40px;
+    height: 40px;
+    font-size: 28px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .wall {
+    background-color: #004080;
+  }
+  .player {
+    background-color: #1E90FF;
+    font-size: 30px;
+  }
+  .monster {
+    background-color: #800000;
+    font-size: 28px;
+  }
+  .key {
+    background-color: #FFD700;
+  }
+  .door {
+    background-color: #654321;
+  }
+  .target {
+    background-color: black;
+    font-size: 28px;
+  }
+  .coffee {
+    background-color: #6F4E37;
+    font-size: 28px;
+  }
+  .cookie {
+    background-color: #D2691E;
+    font-size: 28px;
+  }
+
+  /* Mobile controls */
+  #mobile-controls {
+    text-align: center;
+    margin: 20px 0 40px;
+    user-select: none;
+  }
+  #mobile-controls button {
+    font-size: 2rem;
+    width: 60px;
+    height: 60px;
+    margin: 5px;
+    border-radius: 10px;
+    border: none;
+    background-color: #007BFF;
+    color: white;
+    box-shadow: 0 3px 5px rgba(0,0,0,0.3);
+    touch-action: manipulation;
+  }
+  #mobile-controls button:active {
+    background-color: #0056b3;
+  }
+</style>
+</head>
+<body>
+
+<div id="game"></div>
+
+<div id="mobile-controls">
+  <button id="up">⬆️</button><br/>
+  <button id="left">⬅️</button>
+  <button id="down">⬇️</button>
+  <button id="right">➡️</button>
+</div>
+
+<!-- Sounds -->
+<audio id="moveSound" src="https://freesound.org/data/previews/256/256113_3263906-lq.mp3"></audio>
+<audio id="keySound" src="https://freesound.org/data/previews/331/331912_3248244-lq.mp3"></audio>
+<audio id="doorSound" src="https://freesound.org/data/previews/85/85921_1022656-lq.mp3"></audio>
+<audio id="winSound" src="https://freesound.org/data/previews/331/331912_3248244-lq.mp3"></audio>
+<audio id="hitSound" src="https://freesound.org/data/previews/341/341695_5121236-lq.mp3"></audio>
+<audio id="coffeeSound" src="https://freesound.org/data/previews/33/33781_634166-lq.mp3"></audio>
+
+<script>
+  const maze = [
+    ['#','#','#','#','#','#','P','#','#','#','#','#','#'],
+    ['#','.','.','☕','.','#','.','.','.','#','.','🔑','#'],
+    ['#','.','#','.','#','#','#','#','.','#','.','.','#'],
+    ['#','.','#','.','.','#','.','#','.','#','.','#','#'],
+    ['#','.','#','#','.','#','.','#','.','#','.','#','#'],
+    ['#','.','.','#','.','#','.','#','.','#','.','#','#'],
+    ['#','.','.','#','.','#','.','.','.','#','.','#','#'],
+    ['#','.','.','.','.','#','.','#','#','#','.','.','#'],
+    ['#','#','#','.','.','.','.','.','.','.','.','.','#'],
+    ['#','.','.','.','.','#','.','.','.','#','#','.','#'],
+    ['#','.','#','#','🚪','#','#','#','.','#','#','.','#'],
+    ['#','.','.','#','.','.','.','#','.','.','.','🍪','#'],
+    ['#','#','#','#','#','#','🖤','#','#','#','#','#','#']
+  ];
+
+  let playerPos = { x: 6, y: 0 };
+  let monsterPos = { x: 5, y: 5 };
+  let hasCookie = false;
+  let hasCoffee = false;
+  let hasKey = false;
+  let gameOver = false;
+
+  const gameContainer = document.getElementById('game');
+  const moveSound = document.getElementById('moveSound');
+  const keySound = document.getElementById('keySound');
+  const doorSound = document.getElementById('doorSound');
+  const winSound = document.getElementById('winSound');
+  const hitSound = document.getElementById('hitSound');
+  const coffeeSound = document.getElementById('coffeeSound');
+
+  function renderMaze() {
+    gameContainer.innerHTML = '';
+    for (let y = 0; y < maze.length; y++) {
+      for (let x = 0; x < maze[y].length; x++) {
+        const cell = document.createElement('div');
+        cell.classList.add('cell');
+        const value = maze[y][x];
+
+        if (value === '#') cell.classList.add('wall');
+        else if (value === 'P') {
+          cell.classList.add('player');
+          cell.textContent = gameOver ? '💔' : '💙';
+        }
+        else if (value === '🔨') {
+          cell.classList.add('monster');
+          cell.textContent = '🔨';
+        }
+        else if (value === '🖤') {
+          cell.classList.add('target');
+          cell.textContent = '🖤';
+        }
+        else if (value === '🔑') {
+          cell.classList.add('key');
+          cell.textContent = '🔑';
+        }
+        else if (value === '🚪') {
+          cell.classList.add('door');
+          cell.textContent = '🚪';
+        }
+        else if (value === '☕') {
+          cell.classList.add('coffee');
+          cell.textContent = '☕';
+        }
+        else if (value === '🍪') {
+          cell.classList.add('cookie');
+          cell.textContent = '🍪';
+        } else {
+          cell.textContent = '';
+        }
+
+        gameContainer.appendChild(cell);
+      }
+    }
+  }
+
+  function movePlayer(dx, dy) {
+    if (gameOver) return;
+
+    const newX = playerPos.x + dx;
+    const newY = playerPos.y + dy;
+    const destination = maze[newY]?.[newX];
+
+    if (!destination || destination === '#' || destination === '🔨') return;
+
+    if (destination === '🍪') {
+      hasCookie = true;
+      alert('🍪 Cookie consumed!');
+    }
+
+    if (destination === '☕') {
+      if (!hasCookie) {
+        alert('☕ You need to eat the cookie first!');
+        return;
+      }
+      hasCoffee = true;
+      coffeeSound.currentTime = 0;
+      coffeeSound.play();
+      alert('☕ Coffee drank!');
+    }
+
+    if (destination === '🔑') {
+      if (!hasCoffee) {
+        alert('🔑 You need to drink coffee before grabbing the key!');
+        return;
+      }
+      hasKey = true;
+      keySound.currentTime = 0;
+      keySound.play();
+      alert('🔑 Key picked up!');
+    }
+
+    if (destination === '🚪') {
+      if (hasKey) {
+        maze[newY][newX] = '.';
+        doorSound.currentTime = 0;
+        doorSound.play();
+        alert('🚪 Door unlocked!');
+      } else {
+        alert('🚪 The door is locked. You need the key!');
+        return;
+      }
+    }
+
+    if (destination === '🖤') {
+      winSound.currentTime = 0;
+      winSound.play();
+      setTimeout(() => alert('💙 You reached the black heart! 🖤'), 100);
+    }
+
+    maze[playerPos.y][playerPos.x] = '.';
+    playerPos = { x: newX, y: newY };
+    maze[newY][newX] = 'P';
+    moveSound.currentTime = 0;
+    moveSound.play();
+    renderMaze();
+  }
+
+  function moveMonster() {
+    if (gameOver) return;
+
+    const directions = [
+      { dx: 1, dy: 0 },
+      { dx: -1, dy: 0 },
+      { dx: 0, dy: 1 },
+      { dx: 0, dy: -1 }
+    ];
+    directions.sort(() => Math.random() - 0.5);
+
+    for (let { dx, dy } of directions) {
+      const newX = monsterPos.x + dx;
+      const newY = monsterPos.y + dy;
+      const next = maze[newY]?.[newX];
+      if (next && next !== '#' && next !== '🔨') {
+        if (next === 'P') {
+          hitSound.currentTime = 0;
+          hitSound.play();
+          gameOver = true;
+          maze[monsterPos.y][monsterPos.x] = '.';
+          maze[newY][newX] = 'P';
+          playerPos = { x: newX, y: newY };
+          renderMaze();
+          setTimeout(() => alert("💔 You were caught by the monster! Game Over!"), 100);
+          return;
+        }
+        maze[monsterPos.y][monsterPos.x] = '.';
+        monsterPos = { x: newX, y: newY };
+        maze[newY][newX] = '🔨';
+        renderMaze();
+        return;
+      }
+    }
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (gameOver) return;
+    switch (e.key) {
+      case 'ArrowLeft': movePlayer(-1, 0); break;
+      case 'ArrowRight': movePlayer(1, 0); break;
+      case 'ArrowUp': movePlayer(0, -1); break;
+      case 'ArrowDown': movePlayer(0, 1); break;
+    }
+  });
+
+  document.getElementById('up').addEventListener('click', () => movePlayer(0, -1));
+  document.getElementById('left').addEventListener('click', () => movePlayer(-1, 0));
+  document.getElementById('down').addEventListener('click', () => movePlayer(0, 1));
+  document.getElementById('right').addEventListener('click', () => movePlayer(1, 0));
+
+  maze[monsterPos.y][monsterPos.x] = '🔨';
+  renderMaze();
+  setInterval(moveMonster, 1000);
+</script>
+</body>
+</html>
