@@ -14,51 +14,65 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    min-height: 100vh;
   }
+
   #game {
     display: grid;
-    grid-template-columns: repeat(13, 40px);
-    grid-template-rows: repeat(13, 40px);
-    gap: 2px;
+    grid-template-columns: repeat(13, 1fr);
+    aspect-ratio: 1 / 1;
+    width: 90vmin;
+    max-width: 600px;
     margin-top: 20px;
+    gap: 2px;
     user-select: none;
   }
+
   .cell {
-    width: 40px;
-    height: 40px;
-    font-size: 28px;
+    aspect-ratio: 1 / 1;
+    font-size: clamp(1rem, 2.5vmin, 2rem);
     display: flex;
     justify-content: center;
     align-items: center;
   }
+
   .wall { background-color: #004080; }
-  .player { background-color: #1E90FF; font-size: 30px; }
-  .monster { background-color: #800000; font-size: 28px; }
+  .player { background-color: #1E90FF; font-size: clamp(1.2rem, 3vmin, 2.2rem); }
+  .monster { background-color: #800000; font-size: clamp(1rem, 2.5vmin, 2rem); }
   .key { background-color: #FFD700; }
   .door { background-color: #654321; }
-  .target { background-color: black; font-size: 28px; }
-  .coffee { background-color: #6F4E37; font-size: 28px; }
-  .cookie { background-color: #D2691E; font-size: 28px; }
+  .target { background-color: black; font-size: clamp(1rem, 2.5vmin, 2rem); }
+  .coffee { background-color: #6F4E37; font-size: clamp(1rem, 2.5vmin, 2rem); }
+  .cookie { background-color: #D2691E; font-size: clamp(1rem, 2.5vmin, 2rem); }
 
   #mobile-controls {
     text-align: center;
     margin: 20px 0 40px;
     user-select: none;
   }
+
   #mobile-controls button {
-    font-size: 2rem;
-    width: 60px;
-    height: 60px;
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    width: clamp(50px, 12vw, 80px);
+    height: clamp(50px, 12vw, 80px);
     margin: 5px;
-    border-radius: 10px;
+    border-radius: 12px;
     border: none;
     background-color: #007BFF;
     color: white;
     box-shadow: 0 3px 5px rgba(0,0,0,0.3);
     touch-action: manipulation;
+    transition: background-color 0.2s ease;
   }
+
   #mobile-controls button:active {
     background-color: #0056b3;
+  }
+
+  /* Optional: center mobile controls buttons on small screens */
+  #mobile-controls button#left,
+  #mobile-controls button#right {
+    vertical-align: middle;
   }
 </style>
 </head>
@@ -280,3 +294,4 @@
 </script>
 </body>
 </html>
+
